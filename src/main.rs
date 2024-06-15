@@ -3,11 +3,14 @@ use std::{
     io::{Read, Write},
 };
 
+use clap::Parser;
 use reqwest;
 use serde_json::{Map, Value};
 
+mod cli;
 mod env;
 mod instances;
+use cli::Cli;
 use env::Env;
 
 fn init() {
@@ -52,6 +55,6 @@ fn init_manifest() -> Map<String, Value> {
 fn main() {
     init();
     let manifest = init_manifest();
-
+    Cli::parse();
     let env = Env::from_manifest(manifest);
 }
