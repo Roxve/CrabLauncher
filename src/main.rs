@@ -55,6 +55,8 @@ fn init_manifest() -> Map<String, Value> {
 fn main() {
     init();
     let manifest = init_manifest();
-    Cli::parse();
+    Cli::try_parse();
     let env = Env::from_manifest(manifest);
+
+    dbg!(&env);
 }

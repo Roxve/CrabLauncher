@@ -1,4 +1,4 @@
-use crate::instances::{Version, VersionKind};
+use crate::instances::{init_profile, Profile, Version, VersionKind};
 use serde_json::{Map, Value};
 use std::collections::HashMap;
 
@@ -7,6 +7,8 @@ pub struct Env {
     pub versions: HashMap<String, Version>,
     pub latest_release: String,
     pub latest_snapshot: String,
+
+    pub profiles: Vec<Profile>,
 }
 
 impl Env {
@@ -19,6 +21,7 @@ impl Env {
             versions,
             latest_release,
             latest_snapshot,
+            profiles: init_profile(),
         }
     }
 
@@ -44,7 +47,11 @@ impl Env {
             };
 
             let url = obj["url"].as_str().unwrap().to_string();
-            let version = Version { kind, url };
+            let version = Version {
+                id: id.clone(),
+                kind,
+                url,
+            };
 
             versions.insert(id, version);
         }
