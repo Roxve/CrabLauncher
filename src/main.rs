@@ -4,7 +4,7 @@ use std::{
 };
 
 use clap::{builder::Str, Parser};
-use launch::Arguments;
+use launch::{Arguments, Setup};
 use profiles::Profile;
 use reqwest;
 
@@ -70,8 +70,6 @@ fn main() {
 
     let prof = fs::read_to_string("launcher/profiles/test/test.json").unwrap();
 
-    let obj: Map<String, Value> = serde_json::from_str(prof.as_str()).unwrap();
-
-    let o: Arguments = serde_json::from_str(obj["arguments"].clone().to_string().as_str()).unwrap();
+    let o: Setup = serde_json::from_str(prof.as_str()).unwrap();
     dbg!(&o);
 }

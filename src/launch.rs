@@ -33,6 +33,66 @@ pub struct Arguments {
     pub jvm: Vec<Argument>,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct AssetIndex {
+    pub id: String,
+    pub sha1: String,
+    pub size: i32,
+    #[serde(rename = "totalSize")]
+    pub total_size: i32,
+    pub url: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Download {
+    pub path: Option<String>,
+    pub sha1: String,
+    pub size: i32,
+    pub url: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Downloads {
+    pub client: Download,
+    pub client_mappings: Download,
+    pub server: Download,
+    pub server_mappings: Download,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct JavaVersion {
+    pub component: String,
+    #[serde(rename = "majorVersion")]
+    pub major_version: i32,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct LibraryDownload {
+    pub artifact: Download,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Library {
+    pub downloads: LibraryDownload,
+    pub name: String,
+    pub rules: Option<Vec<Rule>>,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct Setup {
     pub arguments: Arguments,
+    #[serde(rename = "assetIndex")]
+    pub asset_index: AssetIndex,
+
+    pub assets: String,
+    #[serde(rename = "complianceLevel")]
+    pub compliance_level: i32,
+
+    pub downloads: Downloads,
+    pub id: String,
+
+    #[serde(rename = "javaVersion")]
+    pub java_version: JavaVersion,
+
+    pub libraries: Vec<Library>,
 }
