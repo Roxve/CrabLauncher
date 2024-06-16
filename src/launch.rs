@@ -4,6 +4,7 @@ use serde_json::Value;
 #[derive(Deserialize, Debug)]
 pub struct Os {
     pub name: Option<String>,
+    pub version: Option<String>,
     pub arch: Option<String>,
 }
 
@@ -34,20 +35,13 @@ pub struct Arguments {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct AssetIndex {
-    pub id: String,
-    pub sha1: String,
-    pub size: i32,
-    #[serde(rename = "totalSize")]
-    pub total_size: i32,
-    pub url: String,
-}
-
-#[derive(Debug, Deserialize)]
 pub struct Download {
+    pub id: Option<String>,
     pub path: Option<String>,
     pub sha1: String,
     pub size: i32,
+    #[serde(rename = "totalSize")]
+    pub total_size: Option<i32>,
     pub url: String,
 }
 
@@ -82,7 +76,7 @@ pub struct Library {
 pub struct Setup {
     pub arguments: Arguments,
     #[serde(rename = "assetIndex")]
-    pub asset_index: AssetIndex,
+    pub asset_index: Download,
 
     pub assets: String,
     #[serde(rename = "complianceLevel")]
@@ -95,4 +89,6 @@ pub struct Setup {
     pub java_version: JavaVersion,
 
     pub libraries: Vec<Library>,
+    #[serde(rename = "mainClass")]
+    pub main_class: String,
 }
