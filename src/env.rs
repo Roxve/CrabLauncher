@@ -1,4 +1,6 @@
-use crate::instances::{init_profile, write_profile, Manifest, Profile};
+use crate::manifest::Manifest;
+use crate::profiles::{init_profile, write_profile, Profile};
+
 use std::fs;
 
 #[derive(Debug)]
@@ -26,6 +28,9 @@ impl Env {
     }
 
     pub fn add_profile(&mut self, profile: Profile) {
+        if self.profiles.contains(&profile) {
+            return;
+        }
         let profile_dir = &format!("launcher/profiles/{}", &profile.name);
         fs::create_dir_all(profile_dir).unwrap();
 

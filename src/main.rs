@@ -3,22 +3,27 @@ use std::{
     io::{Read, Write},
 };
 
-use clap::Parser;
-use instances::Profile;
+use clap::{builder::Str, Parser};
+use launch::Arguments;
+use profiles::Profile;
 use reqwest;
 
 mod cli;
 mod env;
-mod instances;
+mod launch;
+mod manifest;
+mod profiles;
+
 use cli::Cli;
 use env::Env;
+use serde_json::{Map, Value};
 
 fn init() {
-    fs::create_dir_all("launcher/ibs").expect("failed to create libs folder");
+    fs::create_dir_all("launcher/libraries").expect("failed to create libraries folder");
     fs::create_dir_all("launcher/assests").expect("failed to create assest folder");
 }
 
-fn init_manifest() -> instances::Manifest {
+fn init_manifest() -> manifest::Manifest {
     // download version info
     let res =
         reqwest::blocking::get("https://launchermeta.mojang.com/mc/game/version_manifest.json");
@@ -62,5 +67,11 @@ fn main() {
         name: "test".to_owned(),
         version: "1.21".to_owned(),
     });
-    dbg!(&env);
+
+    let prof = fs::read_to_string("launcher/profiles/test/test.json").unwrap();
+
+    let obj: Map<String, Value> = serde_json::from_str(prof.as_str()).unwrap();
+
+    let o: Arguments = serde_json::from_str(obj["arguments"].clone().to_string().as_str()).unwrap();
+    dbg!(&o);
 }
