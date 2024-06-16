@@ -4,18 +4,18 @@ use clap::{Args, Parser, Subcommand};
 #[command(author, version, about)]
 pub struct Cli {
     #[command(subcommand)]
-    command: Commands,
+    pub command: Commands,
 }
 
 #[derive(Args, Debug)]
 pub struct New {
-    name: String,
-    version: String,
+    pub name: String,
+    pub version: String,
 }
 
 #[derive(Args, Debug)]
 pub struct Run {
-    name: String,
+    pub name: String,
 }
 #[derive(Debug, Subcommand)]
 pub enum Commands {

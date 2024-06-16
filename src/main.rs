@@ -3,24 +3,30 @@ use std::{
     io::{Read, Write},
 };
 
-use clap::{builder::Str, Parser};
-use launch::{Arguments, Setup};
-use profiles::Profile;
+use clap::Parser;
+
+use download::download;
+use profiles::{read_profile_setup, Profile};
 use reqwest;
 
 mod cli;
+mod download;
 mod env;
-mod launch;
+mod error;
 mod manifest;
 mod profiles;
+mod setup;
 
 use cli::Cli;
 use env::Env;
-use serde_json::{Map, Value};
+pub const LAUNCHER_DIR: &str = "launcher";
+pub const LIB_DIR: &str = "launcher/libraries/";
+pub const ASSETS_DIR: &str = "launcher/assets/";
+pub const PROFILES_DIR: &str = "launcher/profiles/";
 
 fn init() {
-    fs::create_dir_all("launcher/libraries").expect("failed to create libraries folder");
-    fs::create_dir_all("launcher/assests").expect("failed to create assest folder");
+    fs::create_dir_all(LIB_DIR).expect("failed to create libraries folder");
+    fs::create_dir_all(ASSETS_DIR).expect("failed to create assest folder");
 }
 
 fn init_manifest() -> manifest::Manifest {
@@ -60,16 +66,29 @@ fn init_manifest() -> manifest::Manifest {
 fn main() {
     init();
     let manifest = init_manifest();
-    Cli::try_parse();
+    let parse = Cli::try_parse().unwrap_or(Cli {
+        command: cli::Commands::List,
+    });
     let mut env = Env::from_manifest(manifest);
 
-    env.add_profile(Profile {
-        name: "test".to_owned(),
-        version: "1.21".to_owned(),
-    });
+    match parse.command {
+        cli::Commands::New(new) => env.add_profile(Profile {
+            name: new.name,
+            version: new.version,
+        }),
+        cli::Commands::Run(_) => todo!(),
+        cli::Commands::List => {
+            println!("__PROFILES__");
+            for profile in env.profiles {
+                println!("{}:\tversion: {}", profile.name, profile.version);
+            }
+        }
+    }
 
-    let prof = fs::read_to_string("launcher/profiles/test/test.json").unwrap();
+    let setup = read_profile_setup("test".to_string());
+    download(setup);
+    // let prof = fs::read_to_string("launcher/profiles/test/test.json").unwrap();
 
-    let o: Setup = serde_json::from_str(prof.as_str()).unwrap();
-    dbg!(&o);
+    // let o: Setup = serde_json::from_str(prof.as_str()).unwrap();
+    // dbg!(&o);
 }
