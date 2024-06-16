@@ -1,65 +1,44 @@
-use crate::instances::{init_profile, Profile, Version, VersionKind};
-use serde_json::{Map, Value};
-use std::collections::HashMap;
+use crate::instances::{init_profile, write_profile, Manifest, Profile};
+use std::fs;
 
 #[derive(Debug)]
 pub struct Env {
-    pub versions: HashMap<String, Version>,
-    pub latest_release: String,
-    pub latest_snapshot: String,
-
     pub profiles: Vec<Profile>,
+    pub manifest: Manifest,
 }
 
 impl Env {
-    pub fn new(
-        versions: HashMap<String, Version>,
-        latest_release: String,
-        latest_snapshot: String,
-    ) -> Self {
+    pub fn from_manifest(manifest: Manifest) -> Self {
         Self {
-            versions,
-            latest_release,
-            latest_snapshot,
+            manifest: manifest,
             profiles: init_profile(),
         }
     }
 
-    pub fn from_manifest(manifest: Map<String, Value>) -> Self {
-        let mut versions: HashMap<String, Version> = HashMap::new();
+    pub fn get_url(&self, ver: &String) -> &String {
+        &self
+            .manifest
+            .versions
+            .iter()
+            .find(|v| &v.id == ver)
+            .unwrap()
+            .url
+    }
 
-        let manifest_versions = manifest["versions"].as_array().unwrap();
+    pub fn add_profile(&mut self, profile: Profile) {
+        let profile_dir = &format!("launcher/profiles/{}", &profile.name);
+        fs::create_dir_all(profile_dir).unwrap();
 
-        for obj in manifest_versions {
-            let obj = obj.as_object().unwrap();
-            let id = obj["id"].as_str().unwrap().to_string();
+        // downloading version json
+        let url = self.get_url(&profile.version);
 
-            let kind = match &obj["type"] {
-                Value::String(s) => match s.as_str() {
-                    "release" => VersionKind::Release,
-                    "snapshot" => VersionKind::Snapshot,
-                    "old_alpha" => VersionKind::OldAlpha,
-                    "old_beta" => VersionKind::OldBeta,
-                    k => panic!("unknown version type {}", k),
-                },
+        let res = reqwest::blocking::get(url).expect("failed to download version json file from url, make sure you are connected to the internet");
+        let text = res.text().unwrap();
+        // writing json
+        fs::write(format!("{profile_dir}/{}.json", &profile.name), text).unwrap();
 
-                k => panic!("invaild version Value type {}", k),
-            };
+        write_profile(&profile);
 
-            let url = obj["url"].as_str().unwrap().to_string();
-            let version = Version {
-                id: id.clone(),
-                kind,
-                url,
-            };
-
-            versions.insert(id, version);
-        }
-        let manifest_latest = manifest["latest"].as_object().unwrap();
-
-        let manifest_latest_release = manifest_latest["release"].as_str().unwrap().to_string();
-        let manifest_latest_snapshot = manifest_latest["snapshot"].as_str().unwrap().to_string();
-
-        Env::new(versions, manifest_latest_release, manifest_latest_snapshot)
+        self.profiles.push(profile);
     }
 }

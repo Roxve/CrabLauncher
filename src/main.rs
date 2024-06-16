@@ -4,8 +4,8 @@ use std::{
 };
 
 use clap::Parser;
+use instances::Profile;
 use reqwest;
-use serde_json::{Map, Value};
 
 mod cli;
 mod env;
@@ -18,7 +18,7 @@ fn init() {
     fs::create_dir_all("launcher/assests").expect("failed to create assest folder");
 }
 
-fn init_manifest() -> Map<String, Value> {
+fn init_manifest() -> instances::Manifest {
     // download version info
     let res =
         reqwest::blocking::get("https://launchermeta.mojang.com/mc/game/version_manifest.json");
@@ -56,7 +56,11 @@ fn main() {
     init();
     let manifest = init_manifest();
     Cli::try_parse();
-    let env = Env::from_manifest(manifest);
+    let mut env = Env::from_manifest(manifest);
 
+    env.add_profile(Profile {
+        name: "test".to_owned(),
+        version: "1.21".to_owned(),
+    });
     dbg!(&env);
 }
