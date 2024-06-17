@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use serde::Deserialize;
 use serde_json::Value;
 
@@ -91,4 +93,16 @@ pub struct Setup {
     pub libraries: Vec<Library>,
     #[serde(rename = "mainClass")]
     pub main_class: String,
+}
+
+// assets
+#[derive(Deserialize, Debug)]
+pub struct Object {
+    pub hash: String,
+    pub size: i32,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Index {
+    pub objects: HashMap<String, Object>,
 }

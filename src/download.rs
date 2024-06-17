@@ -2,7 +2,7 @@ use std::{fs, path::Path};
 
 use crate::{
     error::Error,
-    setup::{Download, Setup},
+    setup::{Download, Index, Setup},
     ASSETS_DIR, LIB_DIR,
 };
 
@@ -13,7 +13,6 @@ impl Download {
             let path = LIB_DIR.to_owned() + self.path.as_ref().unwrap();
             let path = Path::new(&path);
             if path.exists() {
-                dbg!(path);
                 return Ok(());
             }
 
@@ -24,14 +23,35 @@ impl Download {
         } else if self.id.is_some() {
             let indexs_path = format!("{ASSETS_DIR}indexs/{}.json", self.id.as_ref().unwrap());
             let indexs_path = Path::new(&indexs_path);
-            if indexs_path.exists() {
-                dbg!(indexs_path);
-                return Ok(());
-            }
-            let res = reqwest::blocking::get(&self.url).unwrap();
 
+            let res = reqwest::blocking::get(&self.url).unwrap();
+            let bytes = res.bytes().unwrap();
             fs::create_dir_all(indexs_path.parent().unwrap()).unwrap();
-            fs::write(indexs_path, res.bytes().unwrap()).unwrap();
+            fs::write(indexs_path, bytes.clone()).unwrap();
+
+            // downloading objects
+            let index: Index = serde_json::from_slice(&bytes.to_vec()).unwrap();
+            let objects = index.objects;
+
+            for (_, object) in objects {
+                let dir = &object.hash[0..2];
+                let dir_all = format!("{ASSETS_DIR}objects/{}", dir);
+
+                let path = &format!("{dir_all}/{}", object.hash);
+                let path = Path::new(path);
+                if path.exists() {
+                    continue;
+                }
+
+                fs::create_dir_all(&dir_all).unwrap();
+                let res = reqwest::blocking::get(format!(
+                    "https://resources.download.minecraft.net/{dir}/{}",
+                    object.hash
+                ))
+                .unwrap();
+
+                fs::write(path, res.bytes().unwrap()).unwrap();
+            }
         }
         Ok(())
     }
