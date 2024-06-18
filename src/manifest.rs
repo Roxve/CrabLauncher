@@ -1,4 +1,8 @@
+use crate::LAUNCHER_DIR;
+
 use serde::{de::Visitor, Deserialize};
+
+use std::fs;
 
 #[derive(Debug)]
 pub enum VersionKind {
@@ -62,4 +66,33 @@ pub struct Latest {
 pub struct Manifest {
     pub latest: Latest,
     pub versions: Vec<Version>,
+}
+
+impl Manifest {
+    pub fn init_manifest() -> Self {
+        let path = format!("{LAUNCHER_DIR}version_manifest.json");
+        // download version info
+        let res =
+            reqwest::blocking::get("https://launchermeta.mojang.com/mc/game/version_manifest.json");
+        // if offline use pre-downloaded file
+        let manifest = if res.is_ok() {
+            let res = res.unwrap();
+
+            let buffer = res.text().unwrap();
+            let bytes = buffer.as_bytes();
+
+            fs::write(path, bytes).expect("failed writing file version_manifest.json");
+
+            serde_json::from_str(buffer.as_str())
+                .expect("failed reading file version_manifest.json")
+        } else {
+            let buffer = fs::read_to_string(path)
+                .expect("opened version_manifest.json, but failed reading it");
+
+            serde_json::from_str(buffer.as_str())
+                .expect("failed parsing file version_manifest.json")
+        };
+
+        manifest
+    }
 }
