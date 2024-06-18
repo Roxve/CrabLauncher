@@ -15,6 +15,7 @@ mod env;
 mod error;
 mod manifest;
 mod profiles;
+mod rule;
 mod setup;
 
 use cli::Cli;
@@ -23,6 +24,28 @@ pub const LAUNCHER_DIR: &str = "launcher";
 pub const LIB_DIR: &str = "launcher/libraries/";
 pub const ASSETS_DIR: &str = "launcher/assets/";
 pub const PROFILES_DIR: &str = "launcher/profiles/";
+
+pub const OS: &str = if cfg!(target_os = "windows") {
+    "windows"
+} else if cfg!(target_os = "macos") {
+    "osx"
+} else if cfg!(target_os = "linux") {
+    "linux"
+} else {
+    "unknown"
+};
+
+pub const ARCH: &str = if cfg!(target_arch = "x86") {
+    "x86"
+} else if cfg!(target_arch = "x86_64") {
+    "x86_64"
+} else if cfg!(target_arch = "arm") {
+    "arm"
+} else if cfg!(target_arch = "aarch64") {
+    "aarch_64"
+} else {
+    "unknown"
+};
 
 fn init() {
     fs::create_dir_all(LIB_DIR).expect("failed to create libraries folder");

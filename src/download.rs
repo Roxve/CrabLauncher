@@ -60,6 +60,22 @@ impl Download {
 pub fn download(client: Setup) {
     client.asset_index.download().unwrap();
     for lib in client.libraries {
+        if lib.rules.is_some() {
+            let rules = lib.rules.unwrap();
+
+            let mut is_allowed = true;
+            for rule in rules {
+                is_allowed = rule.is_allowed();
+
+                if !is_allowed {
+                    break;
+                }
+            }
+
+            if !is_allowed {
+                continue;
+            }
+        }
         lib.downloads.artifact.download().unwrap();
     }
 }
