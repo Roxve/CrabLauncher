@@ -5,3 +5,4 @@ rls/
 *.o
 .vscode/
 launcher/
+logs

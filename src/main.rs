@@ -69,8 +69,10 @@ fn main() {
 
         cli::Commands::Run { name } => {
             println!("downloading....");
-            download(read_profile_setup(name));
+            download(read_profile_setup(name.clone()));
             println!("downloading: OK\nrunning....");
+            env.run(name);
+            println!("FAILED or closed...");
         }
 
         cli::Commands::Del { name } => env.del_profile(name),
