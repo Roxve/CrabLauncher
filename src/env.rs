@@ -1,5 +1,6 @@
-use crate::manifest::Manifest;
-use crate::profiles::{init_profile, write_profile, Profile};
+use crate::json::manifest::Manifest;
+use crate::profiles::{init_profile, write_profile, write_profiles, Profile};
+use crate::PROFILES_DIR;
 
 use std::fs;
 
@@ -45,5 +46,26 @@ impl Env {
         write_profile(&profile);
 
         self.profiles.push(profile);
+    }
+
+    pub fn del_profile(&mut self, name: String) {
+        let mut found = false;
+
+        for (index, profile) in self.profiles.iter().enumerate() {
+            if &profile.name == &name {
+                self.profiles.remove(index);
+                found = true;
+                break;
+            }
+        }
+
+        if !found {
+            return;
+        }
+
+        fs::remove_dir_all(format!("{PROFILES_DIR}{}", name)).unwrap();
+        write_profiles(&self.profiles);
+
+        println!("removed profile {name}!");
     }
 }

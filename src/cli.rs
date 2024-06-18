@@ -13,13 +13,10 @@ pub struct New {
     pub version: String,
 }
 
-#[derive(Args, Debug)]
-pub struct Run {
-    pub name: String,
-}
 #[derive(Debug, Subcommand)]
 pub enum Commands {
     New(New),
-    Run(Run),
+    Run { name: String },
+    Del { name: String },
     List,
 }

@@ -5,7 +5,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-use crate::{setup::Setup, PROFILES_DIR};
+use crate::{json::client::Client, PROFILES_DIR};
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct Profile {
@@ -48,11 +48,20 @@ pub fn write_profile(profile: &Profile) {
     fs::write("launcher/profiles.json", str).unwrap();
 }
 
-pub fn read_profile_setup(name: String) -> Setup {
-    serde_json::from_str(
+pub fn write_profiles(profiles: &Vec<Profile>) {
+    let str = serde_json::to_string(profiles).unwrap();
+
+    fs::write("launcher/profiles.json", str).unwrap();
+}
+
+pub fn read_profile_setup(name: String) -> Client {
+    let mut client: Client = serde_json::from_str(
         fs::read_to_string(format!("{PROFILES_DIR}{0}/{0}.json", name))
             .unwrap()
             .as_str(),
     )
-    .unwrap()
+    .unwrap();
+
+    client.profile_name = Some(name);
+    client
 }

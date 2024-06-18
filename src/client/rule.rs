@@ -1,4 +1,4 @@
-use crate::setup::Rule;
+use crate::json::client::Rule;
 
 impl Rule {
     pub fn is_allowed(&self) -> bool {

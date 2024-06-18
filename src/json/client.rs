@@ -75,7 +75,7 @@ pub struct Library {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct Setup {
+pub struct Client {
     pub arguments: Arguments,
     #[serde(rename = "assetIndex")]
     pub asset_index: Download,
@@ -93,6 +93,8 @@ pub struct Setup {
     pub libraries: Vec<Library>,
     #[serde(rename = "mainClass")]
     pub main_class: String,
+
+    pub profile_name: Option<String>,
 }
 
 // assets

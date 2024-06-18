@@ -1,21 +1,23 @@
-use std::fs;
+use std::fs::{self, read};
 
 use clap::Parser;
 
-use download::download;
+use client::download::download;
 use profiles::{read_profile_setup, Profile};
 
 mod cli;
-mod download;
+mod config;
 mod env;
+
+mod client;
 mod error;
-mod manifest;
+mod json;
+
 mod profiles;
-mod rule;
-mod setup;
 
 use cli::Cli;
 use env::Env;
+
 pub const LAUNCHER_DIR: &str = "launcher/";
 pub const LIB_DIR: &str = "launcher/libraries/";
 pub const ASSETS_DIR: &str = "launcher/assets/";
@@ -43,6 +45,8 @@ pub const ARCH: &str = if cfg!(target_arch = "x86") {
     "unknown"
 };
 
+use crate::json::manifest::Manifest;
+
 fn init() {
     fs::create_dir_all(LIB_DIR).expect("failed to create libraries folder");
     fs::create_dir_all(ASSETS_DIR).expect("failed to create assest folder");
@@ -50,7 +54,8 @@ fn init() {
 
 fn main() {
     init();
-    let manifest = manifest::Manifest::init_manifest();
+
+    let manifest = Manifest::init_manifest();
     let parse = Cli::try_parse().unwrap_or(Cli {
         command: cli::Commands::List,
     });
@@ -61,7 +66,15 @@ fn main() {
             name: new.name,
             version: new.version,
         }),
-        cli::Commands::Run(_) => todo!(),
+
+        cli::Commands::Run { name } => {
+            println!("downloading....");
+            download(read_profile_setup(name));
+            println!("downloading: OK\nrunning....");
+        }
+
+        cli::Commands::Del { name } => env.del_profile(name),
+
         cli::Commands::List => {
             println!("__PROFILES__");
             for profile in env.profiles {
@@ -69,11 +82,4 @@ fn main() {
             }
         }
     }
-
-    let setup = read_profile_setup("test".to_string());
-    download(setup);
-    // let prof = fs::read_to_string("launcher/profiles/test/test.json").unwrap();
-
-    // let o: Setup = serde_json::from_str(prof.as_str()).unwrap();
-    // dbg!(&o);
 }
