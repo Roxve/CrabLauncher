@@ -8,3 +8,5 @@ clap = { version = "4.5.7", features = ["derive"] }
 reqwest = { version = "0.12.4", features = ["blocking", "json"] }
 serde = { version = "1.0.203", features = ["derive"] }
 serde_json = "1.0.117"
+
+zip = "2.1.3"

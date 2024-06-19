@@ -1,4 +1,6 @@
-use std::{fs, path::Path};
+use std::{fs, io::Cursor, path::Path};
+
+use zip::{result::ZipError, ZipArchive};
 
 use crate::{
     client::rule::is_allowed,
@@ -8,10 +10,14 @@ use crate::{
 };
 
 impl Download {
-    fn download(&self) -> Result<Option<reqwest::blocking::Response>, Error> {
+    fn download(&self, path: String) -> Result<Option<reqwest::blocking::Response>, Error> {
+        if &path == &String::new() {
+            return Ok(Some(reqwest::blocking::get(self.url.clone()).unwrap()));
+        }
+
         // lib else assets
         if self.path.is_some() {
-            let path = LIB_DIR.to_owned() + self.path.as_ref().unwrap();
+            let path = path + self.path.as_ref().unwrap();
             let path = Path::new(&path);
             if path.exists() {
                 return Ok(None);
@@ -23,6 +29,8 @@ impl Download {
             fs::write(path, res.bytes().unwrap()).unwrap();
 
             Ok(None)
+
+        // todo move objects downloads somewhere else
         } else if self.id.is_some() {
             let indexes_path = format!("{ASSETS_DIR}indexes/{}.json", self.id.as_ref().unwrap());
             let indexes_path = Path::new(&indexes_path);
@@ -58,13 +66,25 @@ impl Download {
             Ok(None)
         } else {
             // just download!
-            Ok(Some(reqwest::blocking::get(self.url.clone()).unwrap()))
+            let path = Path::new(&path);
+            if path.exists() {
+                return Ok(None);
+            }
+
+            let res = reqwest::blocking::get(self.url.clone()).unwrap();
+
+            fs::write(path, res.bytes().unwrap()).unwrap();
+
+            Ok(None)
         }
     }
 }
 
 pub fn download(client: Client) {
-    client.asset_index.download().unwrap();
+    client
+        .asset_index
+        .download(format!("{ASSETS_DIR}indexes\\{}.json", client.assets))
+        .unwrap();
 
     for lib in client.libraries {
         if lib.rules.is_some() {
@@ -76,7 +96,12 @@ pub fn download(client: Client) {
         }
 
         if lib.downloads.artifact.is_some() {
-            lib.downloads.artifact.as_ref().unwrap().download().unwrap();
+            lib.downloads
+                .artifact
+                .as_ref()
+                .unwrap()
+                .download(LIB_DIR.to_string())
+                .unwrap();
         }
 
         if lib.natives.is_some() {
@@ -84,8 +109,24 @@ pub fn download(client: Client) {
             for (os, native) in natives {
                 if os == crate::OS {
                     let classifiers = lib.downloads.classifiers.as_ref().unwrap();
+                    let classifier = classifiers.get(&native).unwrap();
 
-                    classifiers.get(&native).unwrap().download().unwrap();
+                    if lib.extract.is_none() {
+                        classifier.download(LIB_DIR.to_string()).unwrap();
+                    } else {
+                        let res = classifier.download(String::new()).unwrap().unwrap();
+
+                        extract(
+                            res.bytes().unwrap().to_vec(),
+                            format!(
+                                "{PROFILES_DIR}{}/.natives",
+                                client.profile_name.as_ref().unwrap()
+                            ),
+                            lib.extract.unwrap().exclude,
+                        )
+                        .unwrap();
+                    }
+
                     break;
                 }
             }
@@ -96,14 +137,45 @@ pub fn download(client: Client) {
     let name = client.profile_name.unwrap();
 
     let path = format!("{PROFILES_DIR}{name}/{name}.jar");
-    let path = Path::new(&path);
-
-    if path.exists() {
-        return;
-    }
 
     // downloading client.jar
-    let res = client.downloads.client.download().unwrap().unwrap();
+    client.downloads.client.download(path).unwrap();
+}
 
-    fs::write(path, res.bytes().unwrap()).unwrap();
+fn extract(jar: Vec<u8>, output: String, exclude: Option<Vec<String>>) -> Result<(), ZipError> {
+    let exclude = exclude.unwrap_or_default();
+
+    let reader = Cursor::new(jar);
+    let mut archive = ZipArchive::new(reader)?;
+
+    for i in 0..archive.len() {
+        let mut file = archive.by_index(i)?;
+
+        let file_path = match file.enclosed_name() {
+            Some(path) => path,
+            None => continue,
+        };
+
+        if exclude.contains(&file_path.to_str().unwrap().to_string())
+            || exclude.contains(&file_path.parent().unwrap().to_str().unwrap().to_string())
+        {
+            continue;
+        }
+
+        let output = Path::new(&output).join(file_path.clone());
+
+        if file.name().ends_with('/') {
+            fs::create_dir_all(output).unwrap();
+        } else {
+            if let Some(p) = output.parent() {
+                if !p.exists() {
+                    std::fs::create_dir_all(&p)?;
+                }
+            }
+
+            let mut outfile = std::fs::File::create(&output)?;
+            std::io::copy(&mut file, &mut outfile)?;
+        }
+    }
+    Ok(())
 }

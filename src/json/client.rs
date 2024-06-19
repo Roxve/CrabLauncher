@@ -89,8 +89,15 @@ pub struct LibraryDownload {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct Extract {
+    pub exclude: Option<Vec<String>>,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct Library {
     pub downloads: LibraryDownload,
+    pub extract: Option<Extract>,
+
     pub name: String,
     pub natives: Option<HashMap<OsName, String>>,
     pub rules: Option<Vec<Rule>>,
