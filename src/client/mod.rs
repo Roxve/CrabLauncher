@@ -29,7 +29,20 @@ pub fn get_req_libs(client: &Client) -> Vec<String> {
                 }
             }
         }
-        libs.push(LIB_DIR.to_owned() + &lib.downloads.artifact.path.as_ref().unwrap());
+
+        if lib.downloads.artifact.is_some() {
+            libs.push(
+                LIB_DIR.to_owned()
+                    + &lib
+                        .downloads
+                        .artifact
+                        .as_ref()
+                        .unwrap()
+                        .path
+                        .as_ref()
+                        .unwrap(),
+            );
+        }
     }
 
     return libs;

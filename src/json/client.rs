@@ -47,9 +47,13 @@ pub enum Argument {
     Rule { rules: Vec<Rule>, value: ArgValue },
 }
 #[derive(Deserialize, Debug)]
-pub struct Arguments {
-    pub game: Vec<Argument>,
-    pub jvm: Vec<Argument>,
+#[serde(untagged)]
+pub enum Arguments {
+    Args {
+        game: Vec<Argument>,
+        jvm: Vec<Argument>,
+    },
+    MinecraftArgs(String),
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -66,9 +70,9 @@ pub struct Download {
 #[derive(Debug, Deserialize)]
 pub struct Downloads {
     pub client: Download,
-    pub client_mappings: Download,
+    pub client_mappings: Option<Download>,
     pub server: Download,
-    pub server_mappings: Download,
+    pub server_mappings: Option<Download>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -80,7 +84,7 @@ pub struct JavaVersion {
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct LibraryDownload {
-    pub artifact: Download,
+    pub artifact: Option<Download>,
     pub classifiers: Option<HashMap<String, Download>>,
 }
 
@@ -94,19 +98,17 @@ pub struct Library {
 
 #[derive(Debug, Deserialize)]
 pub struct Client {
+    #[serde(alias = "minecraftArguments")]
     pub arguments: Arguments,
     #[serde(rename = "assetIndex")]
     pub asset_index: Download,
 
     pub assets: String,
-    #[serde(rename = "complianceLevel")]
-    pub compliance_level: i32,
-
     pub downloads: Downloads,
     pub id: String,
 
     #[serde(rename = "javaVersion")]
-    pub java_version: JavaVersion,
+    pub java_version: Option<JavaVersion>,
 
     pub libraries: Vec<Library>,
     #[serde(rename = "mainClass")]

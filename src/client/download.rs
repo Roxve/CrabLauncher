@@ -74,7 +74,10 @@ pub fn download(client: Client) {
                 continue;
             }
         }
-        lib.downloads.artifact.download().unwrap();
+
+        if lib.downloads.artifact.is_some() {
+            lib.downloads.artifact.as_ref().unwrap().download().unwrap();
+        }
 
         if lib.natives.is_some() {
             let natives = lib.natives.unwrap();
