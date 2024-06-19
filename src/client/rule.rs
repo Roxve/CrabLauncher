@@ -26,3 +26,13 @@ impl Rule {
         return false;
     }
 }
+
+pub fn is_allowed(rules: &Vec<Rule>) -> bool {
+    for rule in rules {
+        if !rule.is_allowed() {
+            return false;
+        }
+    }
+
+    return true;
+}

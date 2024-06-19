@@ -1,6 +1,7 @@
 use std::{fs, path::Path};
 
 use crate::{
+    client::rule::is_allowed,
     error::Error,
     json::client::{Client, Download, Index},
     ASSETS_DIR, LIB_DIR, PROFILES_DIR,
@@ -69,20 +70,23 @@ pub fn download(client: Client) {
         if lib.rules.is_some() {
             let rules = lib.rules.unwrap();
 
-            let mut is_allowed = true;
-            for rule in rules {
-                is_allowed = rule.is_allowed();
-
-                if !is_allowed {
-                    break;
-                }
-            }
-
-            if !is_allowed {
+            if !is_allowed(&rules) {
                 continue;
             }
         }
         lib.downloads.artifact.download().unwrap();
+
+        if lib.natives.is_some() {
+            let natives = lib.natives.unwrap();
+            for (os, native) in natives {
+                if os == crate::OS {
+                    let classifiers = lib.downloads.classifiers.as_ref().unwrap();
+
+                    classifiers.get(&native).unwrap().download().unwrap();
+                    break;
+                }
+            }
+        }
     }
 
     // client path

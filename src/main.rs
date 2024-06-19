@@ -1,8 +1,9 @@
-use std::fs::{self, read};
+use std::fs;
 
 use clap::Parser;
 
 use client::download::download;
+use json::client::{Arch, OsName};
 use profiles::{read_profile_setup, Profile};
 
 mod cli;
@@ -23,26 +24,24 @@ pub const LIB_DIR: &str = "launcher/libraries/";
 pub const ASSETS_DIR: &str = "launcher/assets/";
 pub const PROFILES_DIR: &str = "launcher/profiles/";
 
-pub const OS: &str = if cfg!(target_os = "windows") {
-    "windows"
+pub const OS: OsName = if cfg!(target_os = "windows") {
+    OsName::Windows
 } else if cfg!(target_os = "macos") {
-    "osx"
+    OsName::Osx
 } else if cfg!(target_os = "linux") {
-    "linux"
+    OsName::Linux
 } else {
-    "unknown"
+    panic!("unsupported OS!")
 };
 
-pub const ARCH: &str = if cfg!(target_arch = "x86") {
-    "x86"
+pub const ARCH: Arch = if cfg!(target_arch = "x86") {
+    Arch::X86
 } else if cfg!(target_arch = "x86_64") {
-    "x86_64"
-} else if cfg!(target_arch = "arm") {
-    "arm"
+    Arch::X86_64
 } else if cfg!(target_arch = "aarch64") {
-    "aarch_64"
+    Arch::ARM64
 } else {
-    "unknown"
+    panic!("unsupported arch")
 };
 
 use crate::json::manifest::Manifest;

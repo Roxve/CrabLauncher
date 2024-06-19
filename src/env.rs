@@ -1,10 +1,10 @@
+use crate::client::get_req_libs;
 use crate::config::Config;
 use crate::json::manifest::Manifest;
 use crate::profiles::{init_profile, read_profile_setup, write_profile, write_profiles, Profile};
-use crate::{ASSETS_DIR, LIB_DIR, PROFILES_DIR};
+use crate::{ASSETS_DIR, PROFILES_DIR};
 
 use std::fs;
-use std::path::{Path, PathBuf};
 use std::process::Command;
 
 #[derive(Debug)]
@@ -12,22 +12,6 @@ pub struct Env {
     pub profiles: Vec<Profile>,
     pub manifest: Manifest,
     pub config: Config,
-}
-
-fn get_abs_paths(dir: &Path) -> Result<Vec<PathBuf>, ()> {
-    let mut paths = Vec::new();
-    if dir.is_dir() {
-        for entry in fs::read_dir(dir).unwrap() {
-            let entry = entry.unwrap();
-            let path = entry.path();
-            if path.is_file() {
-                paths.push(fs::canonicalize(&path).unwrap());
-            } else if path.is_dir() {
-                paths.extend(get_abs_paths(&path).unwrap());
-            }
-        }
-    }
-    Ok(paths)
 }
 
 impl Env {
@@ -53,6 +37,16 @@ impl Env {
         if self.profiles.contains(&profile) {
             return;
         }
+
+        if self
+            .profiles
+            .iter()
+            .find(|x| x.name == profile.name)
+            .is_some()
+        {
+            return;
+        }
+
         let profile_dir = &format!("launcher/profiles/{}", &profile.name);
         fs::create_dir_all(profile_dir).unwrap();
 
@@ -66,7 +60,12 @@ impl Env {
 
         write_profile(&profile);
 
-        self.profiles.push(profile);
+        self.profiles.push(profile.clone());
+
+        println!(
+            "created new profile {} with version {}",
+            profile.name, profile.version
+        );
     }
 
     pub fn del_profile(&mut self, name: String) {
@@ -98,14 +97,9 @@ impl Env {
             return;
         }
         let path = format!("{PROFILES_DIR}{name}");
-
         let profile = profile.unwrap();
-        let libs: Vec<String> = client
-            .libraries
-            .iter()
-            .map(|lib| LIB_DIR.to_owned() + &lib.downloads.artifact.path.as_ref().unwrap())
-            .collect();
 
+        let libs: Vec<String> = get_req_libs(&client);
         let classpath = libs.join(":");
 
         Command::new("java")
@@ -114,7 +108,7 @@ impl Env {
             .arg(format!("-Djava.library.path={path}/.natives"))
             .arg("-cp")
             .arg(format!("{classpath}:{path}/{name}.jar"))
-            .arg("net.minecraft.client.main.Main")
+            .arg(client.main_class)
             .arg("--accessToken")
             .arg("0")
             .arg("--username")

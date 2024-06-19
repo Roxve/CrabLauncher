@@ -3,14 +3,30 @@ use std::collections::HashMap;
 use serde::Deserialize;
 use serde_json::Value;
 
-#[derive(Deserialize, Debug, Clone)]
-pub struct Os {
-    pub name: Option<String>,
-    pub version: Option<String>,
-    pub arch: Option<String>,
+#[derive(Debug, Deserialize, PartialEq, Eq, Hash, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+pub enum OsName {
+    Linux,
+    Windows,
+    Osx,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Debug, Clone, Copy, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum Arch {
+    X86_64,
+    X86,
+    ARM64,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct Os {
+    pub name: Option<OsName>,
+    pub version: Option<String>,
+    pub arch: Option<Arch>,
+}
+
+#[derive(Deserialize, Debug, Clone)]
 pub struct Rule {
     pub action: String,
     pub features: Option<Value>,
@@ -36,7 +52,7 @@ pub struct Arguments {
     pub jvm: Vec<Argument>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Download {
     pub id: Option<String>,
     pub path: Option<String>,
@@ -62,15 +78,17 @@ pub struct JavaVersion {
     pub major_version: i32,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct LibraryDownload {
     pub artifact: Download,
+    pub classifiers: Option<HashMap<String, Download>>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Library {
     pub downloads: LibraryDownload,
     pub name: String,
+    pub natives: Option<HashMap<OsName, String>>,
     pub rules: Option<Vec<Rule>>,
 }
 
