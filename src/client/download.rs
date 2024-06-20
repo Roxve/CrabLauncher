@@ -157,7 +157,7 @@ fn extract(jar: Vec<u8>, output: String, exclude: Option<Vec<String>>) -> Result
         };
 
         if exclude.contains(&file_path.to_str().unwrap().to_string())
-            || exclude.contains(&file_path.parent().unwrap().to_str().unwrap().to_string())
+            || exclude.contains(&(file_path.parent().unwrap().to_str().unwrap().to_string() + "/"))
         {
             continue;
         }
