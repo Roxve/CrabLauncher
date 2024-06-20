@@ -17,3 +17,4 @@ then
 cargo run run [profile name]
 ```
 (Will make a new folder in the current dir called "launcher")
+(for now you need "java" in your PATH, some versions may require older java versions....)

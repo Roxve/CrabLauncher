@@ -110,7 +110,7 @@ impl Env {
             .arg(format!("{classpath}:{path}/{name}.jar"))
             .arg(client.main_class)
             .arg("--accessToken")
-            .arg("0")
+            .arg(&self.config.access_token)
             .arg("--username")
             .arg(&self.config.username)
             .arg("--version")

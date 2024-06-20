@@ -7,6 +7,9 @@ pub struct Config {
     pub height: i32,
 
     pub username: String,
+    pub access_token: String,
+
+    pub java: String,
 }
 
 impl Default for Config {
@@ -17,6 +20,8 @@ impl Default for Config {
             width: 854,
             height: 480,
             username: String::from("dev"),
+            access_token: String::from("0"),
+            java: String::from("java"),
         }
     }
 }
