@@ -3,6 +3,7 @@ use std::fs;
 use clap::Parser;
 
 use client::download::download;
+use java::list;
 use json::client::{Arch, OsName};
 use profiles::{read_profile_setup, Profile};
 
@@ -14,6 +15,7 @@ mod client;
 mod error;
 mod json;
 
+mod java;
 mod profiles;
 
 use cli::Cli;
