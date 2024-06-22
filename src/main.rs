@@ -55,7 +55,7 @@ fn init() {
 
 fn main() {
     init();
-
+    list();
     let manifest = Manifest::init_manifest();
     let parse = Cli::try_parse().unwrap_or(Cli {
         command: cli::Commands::List,
