@@ -102,7 +102,7 @@ impl Env {
         let libs: Vec<String> = get_req_libs(&client);
         let classpath = libs.join(":");
 
-        Command::new("java")
+        Command::new(&self.config.java)
             .arg(format!("-Xmx{}M", self.config.max_ram))
             .arg(format!("-Xms{}M", self.config.min_ram))
             .arg(format!("-Djava.library.path={path}/.natives"))

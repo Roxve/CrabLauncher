@@ -1,3 +1,5 @@
+use crate::java::list;
+
 #[derive(Debug)]
 pub struct Config {
     pub min_ram: i32,
@@ -21,7 +23,7 @@ impl Default for Config {
             height: 480,
             username: String::from("dev"),
             access_token: String::from("0"),
-            java: String::from("java"),
+            java: list()[0].path.clone(),
         }
     }
 }
