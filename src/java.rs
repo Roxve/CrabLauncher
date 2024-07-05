@@ -1,5 +1,3 @@
-use std::collections::VecDeque;
-
 use std::{
     os::unix::fs::PermissionsExt,
     path::{Path, PathBuf},
@@ -8,9 +6,10 @@ use std::{
 
 use regex::Regex;
 use rust_search::SearchBuilder;
+use serde::{Deserialize, Serialize};
 
 use crate::{json::client::OsName, OS};
-
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct JavaInstallation {
     pub path: String,
     pub version: String,
@@ -64,22 +63,6 @@ pub fn list() -> Vec<JavaInstallation> {
 
     sort_by_version(&mut list);
     return list;
-}
-
-fn get_version(version: &String) -> u32 {
-    let version: Vec<u8> = version.bytes().collect();
-
-    let mut res = 0;
-    let mut index = 0;
-
-    for n in (0..version.len()).rev() {
-        if version[n] != ('.' as u8) && version[n] != ('_' as u8) {
-            res += ((version[n] - '0' as u8) as u32) * 10_u32.pow(index);
-            index += 1;
-        }
-    }
-
-    return res;
 }
 
 fn sort_by_version(list: &mut Vec<JavaInstallation>) {

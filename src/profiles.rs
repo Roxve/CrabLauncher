@@ -1,16 +1,20 @@
 use std::{
     fs::{self, File},
     io::{Read, Write},
+    path::Path,
 };
 
 use serde::{Deserialize, Serialize};
 
-use crate::{json::client::Client, PROFILES_DIR};
+use crate::{config::Config, json::client::Client, LAUNCHER_DIR, PROFILES_DIR};
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct Profile {
     pub name: String,
     pub version: String,
+
+    #[serde(skip)]
+    pub config: Option<Config>,
 }
 
 pub fn init_profile() -> Vec<Profile> {
@@ -34,9 +38,23 @@ pub fn init_profile() -> Vec<Profile> {
         return Vec::new();
     }
 
-    let profiles: Vec<Profile> = serde_json::from_str(buffer.as_str()).unwrap();
+    let mut profiles: Vec<Profile> = serde_json::from_str(buffer.as_str()).unwrap();
 
-    return profiles;
+    for profile in &mut profiles {
+        let profile_spec_config = format!("{PROFILES_DIR}/{}/config.json", profile.name);
+        let profile_spec_config = Path::new(&profile_spec_config);
+
+        let config = if profile_spec_config.exists() {
+            let config = fs::read_to_string(profile_spec_config).unwrap();
+            Some(serde_json::from_str(&config).unwrap())
+        } else {
+            None
+        };
+
+        profile.config = config;
+    }
+
+    profiles
 }
 
 pub fn write_profile(profile: &Profile) {
@@ -49,9 +67,11 @@ pub fn write_profile(profile: &Profile) {
 }
 
 pub fn write_profiles(profiles: &Vec<Profile>) {
-    let str = serde_json::to_string(profiles).unwrap();
+    let profiles_json =
+        serde_json::to_string_pretty(profiles).expect("Failed to serialize profiles");
 
-    fs::write("launcher/profiles.json", str).unwrap();
+    let profiles_path = format!("{}/profiles.json", LAUNCHER_DIR);
+    fs::write(profiles_path, profiles_json).expect("Failed to write profiles to file");
 }
 
 pub fn read_profile_setup(name: String) -> Client {

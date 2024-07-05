@@ -1,3 +1,4 @@
+use crate::config::Config;
 use clap::{Args, Parser, Subcommand};
 
 #[derive(Debug, Parser)]
@@ -16,7 +17,17 @@ pub struct New {
 #[derive(Debug, Subcommand)]
 pub enum Commands {
     New(New),
-    Run { name: String },
-    Del { name: String },
+    Edit {
+        name: String,
+        entry: String,
+        value: Option<String>,
+    },
+
+    Run {
+        name: String,
+    },
+    Del {
+        name: String,
+    },
     List,
 }

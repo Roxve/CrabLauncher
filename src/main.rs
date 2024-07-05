@@ -3,6 +3,7 @@ use std::fs;
 use clap::Parser;
 
 use client::download::download;
+use config::Config;
 use json::client::{Arch, OsName};
 use profiles::{read_profile_setup, Profile};
 
@@ -47,25 +48,34 @@ pub const ARCH: Arch = if cfg!(target_arch = "x86") {
 
 use crate::json::manifest::Manifest;
 
-fn init() {
+fn init() -> (Manifest, Config) {
     fs::create_dir_all(LIB_DIR).expect("failed to create libraries folder");
     fs::create_dir_all(ASSETS_DIR).expect("failed to create assest folder");
+
+    let manifest = Manifest::init_manifest();
+    let config = Config::init_config();
+
+    (manifest, config)
 }
 
 fn main() {
-    init();
+    let (manifest, config) = init();
 
-    let manifest = Manifest::init_manifest();
     let parse = Cli::try_parse().unwrap_or(Cli {
         command: cli::Commands::List,
     });
-    let mut env = Env::from_manifest(manifest);
+    let mut env = Env::new(manifest, config);
 
     match parse.command {
         cli::Commands::New(new) => env.add_profile(Profile {
             name: new.name,
             version: new.version,
+            config: None,
         }),
+
+        cli::Commands::Edit { name, entry, value } => {
+            env.edit_profile_entry(name, entry, value);
+        }
 
         cli::Commands::Run { name } => {
             println!("downloading....");
